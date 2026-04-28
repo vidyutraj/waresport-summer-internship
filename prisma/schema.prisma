@@ -1,0 +1,133 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  INTERN
+}
+
+enum AssignedTo {
+  ALL
+  TRACK
+  INDIVIDUAL
+}
+
+model User {
+  id                String           @id @default(cuid())
+  name              String
+  email             String           @unique
+  passwordHash      String
+  role              Role             @default(INTERN)
+  track             String?
+  bio               String?
+  linkedin          String?
+  phone             String?
+  avatarUrl         String?
+  mustChangePassword Boolean         @default(true)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  taskAssignments   TaskAssignment[]
+  weeklyLogs        WeeklyLog[]
+  createdTasks      Task[]           @relation("CreatedTasks")
+  individualTasks   Task[]           @relation("AssignedTasks")
+  createdResources  Resource[]       @relation("CreatedResources")
+  createdAnnouncements Announcement[] @relation("CreatedAnnouncements")
+}
+
+model Task {
+  id          String         @id @default(cuid())
+  title       String
+  description String?
+  weekNumber  Int
+  dueDate     DateTime?
+  assignedTo      AssignedTo     @default(ALL)
+  track           String?
+  assignedUserId  String?
+  assignedUser    User?          @relation("AssignedTasks", fields: [assignedUserId], references: [id], onDelete: SetNull)
+  createdBy   String
+  creator     User           @relation("CreatedTasks", fields: [createdBy], references: [id])
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  assignments TaskAssignment[]
+}
+
+model TaskAssignment {
+  id          String    @id @default(cuid())
+  taskId      String
+  userId      String
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+
+  task        Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  submissions TaskSubmission[]
+
+  @@unique([taskId, userId])
+}
+
+model TaskSubmission {
+  id           String   @id @default(cuid())
+  assignmentId String
+  userId       String
+  body         String?  @db.Text
+  linkUrl      String?
+  createdAt    DateTime @default(now())
+
+  assignment TaskAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  @@index([assignmentId])
+  @@index([userId])
+}
+
+model WeeklyLog {
+  id              String   @id @default(cuid())
+  userId          String
+  weekNumber      Int
+  workedOn        String
+  blockers        String?
+  nextWeekGoals   String
+  submittedAt     DateTime @default(now())
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekNumber])
+}
+
+model Resource {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  url         String
+  category    String
+  isRequired  Boolean  @default(false)
+  uploadedBy  String
+  uploader    User     @relation("CreatedResources", fields: [uploadedBy], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  body      String
+  createdBy String
+  creator   User     @relation("CreatedAnnouncements", fields: [createdBy], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}

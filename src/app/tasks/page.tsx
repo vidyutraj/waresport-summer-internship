@@ -1,0 +1,86 @@
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
+import { AppLayout } from "@/components/layout/app-layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { TaskCheckbox } from "@/components/shared/task-checkbox";
+import { getCurrentProgramWeek } from "@/lib/utils";
+
+export default async function TasksPage() {
+  const session = await getServerSession(authOptions);
+  if (!session) redirect("/login");
+  if (session.user.role === "ADMIN") redirect("/admin/tasks");
+
+  const currentWeek = getCurrentProgramWeek();
+
+  const assignments = await prisma.taskAssignment.findMany({
+    where: { userId: session.user.id },
+    include: { task: true },
+    orderBy: [{ task: { weekNumber: "asc" } }, { task: { dueDate: "asc" } }],
+  });
+
+  const groupedByWeek = assignments.reduce((acc, a) => {
+    const week = a.task.weekNumber;
+    if (!acc[week]) acc[week] = [];
+    acc[week].push(a);
+    return acc;
+  }, {} as Record<number, typeof assignments>);
+
+  const weeks = Object.keys(groupedByWeek)
+    .map(Number)
+    .sort((a, b) => b - a);
+
+  return (
+    <AppLayout>
+      <div className="mb-8">
+        <h1 className="text-2xl font-bold text-gray-900">Tasks</h1>
+        <p className="text-gray-500 mt-1">Your full task list, grouped by week</p>
+      </div>
+
+      {weeks.length === 0 ? (
+        <div className="text-center py-16 text-gray-400">
+          <p>No tasks assigned yet. Check back soon.</p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {weeks.map((week) => {
+            const tasks = groupedByWeek[week];
+            const completed = tasks.filter((t) => t.completedAt).length;
+            const isCurrentWeek = week === currentWeek;
+            return (
+              <Card key={week}>
+                <CardHeader className="flex flex-row items-center justify-between pb-3">
+                  <div className="flex items-center gap-3">
+                    <CardTitle className="text-base">Week {week}</CardTitle>
+                    {isCurrentWeek && <Badge variant="default">Current</Badge>}
+                  </div>
+                  <span className="text-sm text-gray-500">
+                    {completed}/{tasks.length} completed
+                  </span>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2">
+                    {tasks.map((assignment) => (
+                      <li key={assignment.id}>
+                        <TaskCheckbox
+                          assignmentId={assignment.id}
+                          title={assignment.task.title}
+                          description={assignment.task.description}
+                          dueDate={assignment.task.dueDate}
+                          completedAt={assignment.completedAt}
+                          taskId={assignment.task.id}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+    </AppLayout>
+  );
+}

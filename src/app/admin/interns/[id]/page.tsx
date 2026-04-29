@@ -140,7 +140,13 @@ export default async function InternDetailPage({ params }: { params: { id: strin
                       <ul className="space-y-2">
                         {a.submissions.map((s) => (
                           <li key={s.id} className="text-sm border-l-2 border-brand-200 pl-3">
-                            <p className="text-xs text-gray-400">{formatDate(s.createdAt)}</p>
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-xs text-gray-400">{formatDate(s.createdAt)}</p>
+                              <span className="text-[10px] uppercase text-gray-400">{s.kind}</span>
+                            </div>
+                            {s.kind === "CONFIRMATION" && !s.body && !s.linkUrl && (
+                              <p className="text-gray-700 mt-1 font-medium">Confirmed completion</p>
+                            )}
                             {s.body && <p className="text-gray-700 mt-1 whitespace-pre-wrap">{s.body}</p>}
                             {s.linkUrl && (
                               <a

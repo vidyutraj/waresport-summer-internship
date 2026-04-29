@@ -132,9 +132,19 @@ export async function GET(
   const subRows: string[][] = [];
   for (const a of intern.taskAssignments) {
     for (const s of a.submissions) {
-      const excerpt = (s.body ?? "").slice(0, 120) + ((s.body?.length ?? 0) > 120 ? "…" : "");
+      const typeLabel =
+        s.kind === "CONFIRMATION"
+          ? "Confirm"
+          : s.kind === "LINK"
+            ? "Link/file"
+            : s.kind === "TEXT"
+              ? "Text"
+              : String(s.kind);
+      let excerpt = (s.body ?? "").slice(0, 120) + ((s.body?.length ?? 0) > 120 ? "…" : "");
+      if (s.kind === "CONFIRMATION" && !excerpt && !s.linkUrl) excerpt = "Confirmed";
       subRows.push([
         a.task.title,
+        typeLabel,
         excerpt || "—",
         s.linkUrl ?? "—",
         s.createdAt.toLocaleString(),
@@ -144,8 +154,8 @@ export async function GET(
 
   autoTable(doc, {
     startY: y,
-    head: [["Task", "Notes (excerpt)", "Link", "Submitted"]],
-    body: subRows.length ? subRows : [["—", "No submissions yet", "", ""]],
+    head: [["Task", "Type", "Notes (excerpt)", "Link", "Submitted"]],
+    body: subRows.length ? subRows : [["—", "—", "No submissions yet", "", ""]],
     margin: { left: margin, right: margin },
     styles: { fontSize: 8 },
     headStyles: { fillColor: [211, 0, 0] },

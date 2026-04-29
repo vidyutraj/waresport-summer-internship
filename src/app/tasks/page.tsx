@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TaskCheckbox } from "@/components/shared/task-checkbox";
 import { getCurrentProgramWeek } from "@/lib/utils";
+import { canMarkTaskComplete } from "@/lib/submission-kind";
 
 export default async function TasksPage() {
   const session = await getServerSession(authOptions);
@@ -17,7 +18,7 @@ export default async function TasksPage() {
 
   const assignments = await prisma.taskAssignment.findMany({
     where: { userId: session.user.id },
-    include: { task: true },
+    include: { task: true, _count: { select: { submissions: true } } },
     orderBy: [{ task: { weekNumber: "asc" } }, { task: { dueDate: "asc" } }],
   });
 
@@ -71,6 +72,10 @@ export default async function TasksPage() {
                           dueDate={assignment.task.dueDate}
                           completedAt={assignment.completedAt}
                           taskId={assignment.task.id}
+                          canMarkComplete={canMarkTaskComplete(
+                            assignment.task,
+                            assignment._count.submissions
+                          )}
                         />
                       </li>
                     ))}

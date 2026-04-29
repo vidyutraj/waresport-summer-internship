@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AssignedTo } from "@prisma/client";
+import { parseTaskSubmissionSettings } from "@/lib/submission-kind";
 
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
@@ -20,6 +21,8 @@ export async function POST(req: Request) {
     track,
     assignedUserId,
     assignedUserIds,
+    requiresSubmission,
+    submissionKind,
   } = body as {
     title: string;
     description?: string | null;
@@ -29,7 +32,14 @@ export async function POST(req: Request) {
     track?: string | null;
     assignedUserId?: string | null;
     assignedUserIds?: string[];
+    requiresSubmission?: boolean;
+    submissionKind?: string;
   };
+
+  const sub = parseTaskSubmissionSettings({ requiresSubmission, submissionKind });
+  if (!sub.ok) {
+    return NextResponse.json({ error: sub.error }, { status: 400 });
+  }
 
   if (!title || !weekNumber) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -59,6 +69,8 @@ export async function POST(req: Request) {
       track: assignedTo === "TRACK" ? track : null,
       assignedUserId:
         assignedTo === "INDIVIDUAL" && individualIds.length === 1 ? individualIds[0] : null,
+      requiresSubmission: sub.requiresSubmission,
+      submissionKind: sub.submissionKind,
       createdBy: session.user.id,
     },
   });

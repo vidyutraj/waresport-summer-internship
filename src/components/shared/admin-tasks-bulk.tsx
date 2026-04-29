@@ -19,6 +19,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CheckCircle2, Clock, Loader2, Pencil } from "lucide-react";
 import { EditTaskDialog } from "@/components/shared/edit-task-dialog";
 import { formatDate, TRACKS, getInitials } from "@/lib/utils";
+import { submissionKindShortLabel } from "@/lib/submission-kind";
+import type { SubmissionKind } from "@prisma/client";
 
 type Assignment = { id: string; userId: string; completedAt: string | null };
 export type TaskRow = {
@@ -29,6 +31,8 @@ export type TaskRow = {
   dueDate: string | null;
   assignedTo: string;
   track: string | null;
+  requiresSubmission: boolean;
+  submissionKind: string;
   assignments: Assignment[];
   creator: { name: string };
   assignedUser: { name: string } | null;
@@ -216,6 +220,11 @@ export function AdminTasksBulkClient({
                                 {task.assignments.length > 1
                                   ? `${task.assignments.length} interns`
                                   : task.assignedUser?.name ?? "Individual"}
+                              </Badge>
+                            )}
+                            {task.requiresSubmission && task.submissionKind !== "NONE" && (
+                              <Badge variant="outline" className="text-xs">
+                                Submit: {submissionKindShortLabel(task.submissionKind as SubmissionKind)}
                               </Badge>
                             )}
                           </div>

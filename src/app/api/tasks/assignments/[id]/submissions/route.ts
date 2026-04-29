@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { SubmissionKind } from "@prisma/client";
 
 export async function GET(
   _req: Request,
@@ -45,29 +46,68 @@ export async function POST(
 
   const assignment = await prisma.taskAssignment.findUnique({
     where: { id: params.id },
+    include: { task: true },
   });
 
   if (!assignment || assignment.userId !== session.user.id) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const { body, linkUrl } = await req.json();
-  const text = typeof body === "string" ? body.trim() : "";
-  const link = typeof linkUrl === "string" ? linkUrl.trim() : "";
-
-  if (!text && !link) {
+  const task = assignment.task;
+  if (!task.requiresSubmission || task.submissionKind === SubmissionKind.NONE) {
     return NextResponse.json(
-      { error: "Add a description or a link (or both)" },
+      { error: "This task does not require a submission" },
       { status: 400 }
     );
+  }
+
+  const payload = await req.json();
+  const text = typeof payload.body === "string" ? payload.body.trim() : "";
+  const link = typeof payload.linkUrl === "string" ? payload.linkUrl.trim() : "";
+  const confirmed = payload.confirm === true;
+
+  let body: string | null = null;
+  let linkUrl: string | null = null;
+  const kind = task.submissionKind;
+
+  if (task.submissionKind === SubmissionKind.TEXT) {
+    if (!text) {
+      return NextResponse.json({ error: "Please add a written response" }, { status: 400 });
+    }
+    body = text;
+    linkUrl = link || null;
+  } else if (task.submissionKind === SubmissionKind.LINK) {
+    if (!link) {
+      return NextResponse.json(
+        { error: "Please add a link to your file or document" },
+        { status: 400 }
+      );
+    }
+    try {
+      // eslint-disable-next-line no-new
+      new URL(link);
+    } catch {
+      return NextResponse.json({ error: "Please enter a valid URL" }, { status: 400 });
+    }
+    linkUrl = link;
+    body = text || null;
+  } else if (task.submissionKind === SubmissionKind.CONFIRMATION) {
+    if (!confirmed) {
+      return NextResponse.json({ error: "Confirm to submit" }, { status: 400 });
+    }
+    body = null;
+    linkUrl = null;
+  } else {
+    return NextResponse.json({ error: "Invalid task submission configuration" }, { status: 400 });
   }
 
   const submission = await prisma.taskSubmission.create({
     data: {
       assignmentId: params.id,
       userId: session.user.id,
-      body: text || null,
-      linkUrl: link || null,
+      kind,
+      body,
+      linkUrl,
     },
   });
 

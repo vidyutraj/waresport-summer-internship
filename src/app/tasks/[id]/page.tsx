@@ -11,6 +11,7 @@ import Link from "next/link";
 import { formatDate } from "@/lib/utils";
 import { TaskCheckbox } from "@/components/shared/task-checkbox";
 import { TaskSubmissionForm } from "@/components/shared/task-submission-form";
+import { canMarkTaskComplete, submissionKindShortLabel } from "@/lib/submission-kind";
 
 export default async function TaskDetailPage({ params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
@@ -27,6 +28,7 @@ export default async function TaskDetailPage({ params }: { params: { id: string 
   if (!assignment) notFound();
 
   const { task } = assignment;
+  const canComplete = canMarkTaskComplete(task, assignment.submissions.length);
 
   return (
     <AppLayout>
@@ -43,7 +45,14 @@ export default async function TaskDetailPage({ params }: { params: { id: string 
         <Card>
           <CardContent className="p-8">
             <div className="flex items-start justify-between gap-4 mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">{task.title}</h1>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">{task.title}</h1>
+                {task.requiresSubmission && task.submissionKind !== "NONE" && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Submission required · {submissionKindShortLabel(task.submissionKind)}
+                  </p>
+                )}
+              </div>
               <Badge variant="default">Week {task.weekNumber}</Badge>
             </div>
 
@@ -81,23 +90,29 @@ export default async function TaskDetailPage({ params }: { params: { id: string 
               )}
             </div>
 
-            <TaskCheckbox
-              assignmentId={assignment.id}
-              title={task.title}
-              dueDate={task.dueDate}
-              completedAt={assignment.completedAt}
-              taskId={task.id}
-            />
-
             <div className="mt-8 pt-8 border-t border-gray-100">
               <TaskSubmissionForm
                 assignmentId={assignment.id}
+                requiresSubmission={task.requiresSubmission}
+                submissionKind={task.submissionKind}
                 initialSubmissions={assignment.submissions.map((s) => ({
                   id: s.id,
+                  kind: s.kind,
                   body: s.body,
                   linkUrl: s.linkUrl,
                   createdAt: s.createdAt.toISOString(),
                 }))}
+              />
+            </div>
+
+            <div className="mt-8 pt-8 border-t border-gray-100">
+              <TaskCheckbox
+                assignmentId={assignment.id}
+                title={task.title}
+                dueDate={task.dueDate}
+                completedAt={assignment.completedAt}
+                taskId={task.id}
+                canMarkComplete={canComplete}
               />
             </div>
           </CardContent>

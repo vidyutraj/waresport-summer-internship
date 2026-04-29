@@ -6,6 +6,7 @@ import { cn, formatDate } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { SUBMIT_BEFORE_COMPLETE_HINT } from "@/lib/submission-kind";
 
 interface TaskCheckboxProps {
   assignmentId: string;
@@ -14,17 +15,33 @@ interface TaskCheckboxProps {
   dueDate?: Date | null;
   completedAt?: Date | null;
   taskId: string;
+  /** When false, user cannot mark complete until they submit (server also enforces). */
+  canMarkComplete?: boolean;
 }
 
-export function TaskCheckbox({ assignmentId, title, description, dueDate, completedAt, taskId }: TaskCheckboxProps) {
+export function TaskCheckbox({
+  assignmentId,
+  title,
+  description,
+  dueDate,
+  completedAt,
+  taskId,
+  canMarkComplete = true,
+}: TaskCheckboxProps) {
   const [completed, setCompleted] = useState(!!completedAt);
   const [isPending, startTransition] = useTransition();
+  const [apiError, setApiError] = useState("");
   const router = useRouter();
 
   const isOverdue = dueDate && !completed && new Date(dueDate) < new Date();
 
   async function toggle() {
     const newValue = !completed;
+    if (newValue && !canMarkComplete) {
+      setApiError(SUBMIT_BEFORE_COMPLETE_HINT);
+      return;
+    }
+    setApiError("");
     setCompleted(newValue);
 
     startTransition(async () => {
@@ -36,6 +53,12 @@ export function TaskCheckbox({ assignmentId, title, description, dueDate, comple
 
       if (!res.ok) {
         setCompleted(!newValue);
+        try {
+          const data = await res.json();
+          setApiError(typeof data.error === "string" ? data.error : "Could not update task");
+        } catch {
+          setApiError("Could not update task");
+        }
       } else {
         router.refresh();
       }
@@ -43,20 +66,29 @@ export function TaskCheckbox({ assignmentId, title, description, dueDate, comple
   }
 
   return (
-    <div className={cn(
-      "flex items-start gap-3 rounded-lg p-3 border transition-colors",
-      completed ? "bg-green-50 border-green-100" : isOverdue ? "bg-red-50 border-red-100" : "bg-white border-gray-100 hover:border-gray-200"
-    )}>
+    <div
+      className={cn(
+        "flex items-start gap-3 rounded-lg p-3 border transition-colors",
+        completed
+          ? "bg-green-50 border-green-100"
+          : isOverdue
+            ? "bg-red-50 border-red-100"
+            : "bg-white border-gray-100 hover:border-gray-200"
+      )}
+    >
       <button
+        type="button"
         onClick={toggle}
         disabled={isPending}
         className={cn(
           "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border-2 transition-all",
           completed
             ? "bg-green-500 border-green-500 scale-110"
-            : "border-gray-300 hover:border-brand-400"
+            : "border-gray-300 hover:border-brand-400",
+          !canMarkComplete && !completed && "opacity-60 cursor-not-allowed hover:border-gray-300"
         )}
         aria-label={completed ? "Mark incomplete" : "Mark complete"}
+        title={!canMarkComplete && !completed ? SUBMIT_BEFORE_COMPLETE_HINT : undefined}
       >
         {completed && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
       </button>
@@ -78,6 +110,10 @@ export function TaskCheckbox({ assignmentId, title, description, dueDate, comple
             <span className="text-xs text-gray-400">Due {formatDate(dueDate)}</span>
           </div>
         )}
+        {!canMarkComplete && !completed && (
+          <p className="text-xs text-amber-700 mt-1.5">{SUBMIT_BEFORE_COMPLETE_HINT}</p>
+        )}
+        {apiError && <p className="text-xs text-red-600 mt-1.5">{apiError}</p>}
       </div>
 
       <Link

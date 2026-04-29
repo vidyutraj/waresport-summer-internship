@@ -14,10 +14,26 @@ export async function PATCH(
 
   const assignment = await prisma.taskAssignment.findUnique({
     where: { id: params.id },
+    include: {
+      task: true,
+      _count: { select: { submissions: true } },
+    },
   });
 
   if (!assignment || assignment.userId !== session.user.id) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  if (
+    completed &&
+    assignment.task.requiresSubmission &&
+    assignment.task.submissionKind !== "NONE" &&
+    assignment._count.submissions === 0
+  ) {
+    return NextResponse.json(
+      { error: "Submit your work for this task before marking it complete." },
+      { status: 400 }
+    );
   }
 
   const updated = await prisma.taskAssignment.update({

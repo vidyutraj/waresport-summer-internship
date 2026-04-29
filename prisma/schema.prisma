@@ -18,6 +18,14 @@ enum AssignedTo {
   INDIVIDUAL
 }
 
+// How interns submit work when requiresSubmission is true. NONE = no submission flow.
+enum SubmissionKind {
+  NONE
+  TEXT
+  LINK
+  CONFIRMATION
+}
+
 model User {
   id                String           @id @default(cuid())
   name              String
@@ -51,6 +59,8 @@ model Task {
   track           String?
   assignedUserId  String?
   assignedUser    User?          @relation("AssignedTasks", fields: [assignedUserId], references: [id], onDelete: SetNull)
+  requiresSubmission Boolean   @default(false)
+  submissionKind   SubmissionKind @default(NONE)
   createdBy   String
   creator     User           @relation("CreatedTasks", fields: [createdBy], references: [id])
   createdAt   DateTime       @default(now())
@@ -77,6 +87,7 @@ model TaskSubmission {
   id           String   @id @default(cuid())
   assignmentId String
   userId       String
+  kind         SubmissionKind @default(TEXT)
   body         String?  @db.Text
   linkUrl      String?
   createdAt    DateTime @default(now())

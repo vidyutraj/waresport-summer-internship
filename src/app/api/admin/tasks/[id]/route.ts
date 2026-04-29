@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AssignedTo, Role } from "@prisma/client";
+import { parseTaskSubmissionSettings } from "@/lib/submission-kind";
 import type { Task } from "@prisma/client";
 
 async function syncAssignmentsAfterUpdate(
@@ -81,6 +82,8 @@ export async function PATCH(
     assignedTo,
     track,
     assignedUserIds,
+    requiresSubmission,
+    submissionKind,
   } = body as {
     title: string;
     description?: string | null;
@@ -89,7 +92,14 @@ export async function PATCH(
     assignedTo: string;
     track?: string | null;
     assignedUserIds?: string[];
+    requiresSubmission?: boolean;
+    submissionKind?: string;
   };
+
+  const sub = parseTaskSubmissionSettings({ requiresSubmission, submissionKind });
+  if (!sub.ok) {
+    return NextResponse.json({ error: sub.error }, { status: 400 });
+  }
 
   if (!title?.trim() || weekNumber == null || !assignedTo) {
     return NextResponse.json({ error: "Title, week, and assign-to are required" }, { status: 400 });
@@ -121,6 +131,8 @@ export async function PATCH(
       assignedTo: mode,
       track: mode === AssignedTo.TRACK ? track!.trim() : null,
       assignedUserId: mode === AssignedTo.INDIVIDUAL ? assignedUserIdForRow : null,
+      requiresSubmission: sub.requiresSubmission,
+      submissionKind: sub.submissionKind,
     },
   });
 

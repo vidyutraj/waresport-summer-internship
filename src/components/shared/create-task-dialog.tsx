@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Search, X } from "lucide-react";
 import { TRACKS, getInitials } from "@/lib/utils";
+import { SUBMISSION_KIND_OPTIONS } from "@/lib/submission-kind";
 
 interface Intern {
   id: string;
@@ -37,6 +38,8 @@ export function CreateTaskDialog({ children }: { children: React.ReactNode }) {
   const [loadingInterns, setLoadingInterns] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [requiresSubmission, setRequiresSubmission] = useState(false);
+  const [submissionKind, setSubmissionKind] = useState<"TEXT" | "LINK" | "CONFIRMATION">("TEXT");
 
   // Fetch interns when dialog opens or when switching to INDIVIDUAL
   useEffect(() => {
@@ -53,6 +56,7 @@ export function CreateTaskDialog({ children }: { children: React.ReactNode }) {
   function reset() {
     setTitle(""); setDescription(""); setWeekNumber("1"); setDueDate("");
     setAssignedTo("ALL"); setTrack(""); setSelectedInternIds(new Set()); setInternSearch(""); setError("");
+    setRequiresSubmission(false); setSubmissionKind("TEXT");
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -75,6 +79,8 @@ export function CreateTaskDialog({ children }: { children: React.ReactNode }) {
         track: assignedTo === "TRACK" ? track : null,
         assignedUserIds:
           assignedTo === "INDIVIDUAL" ? Array.from(selectedInternIds) : undefined,
+        requiresSubmission,
+        submissionKind: requiresSubmission ? submissionKind : "NONE",
       }),
     });
 
@@ -120,6 +126,39 @@ export function CreateTaskDialog({ children }: { children: React.ReactNode }) {
             <Label htmlFor="task-desc">Description (optional)</Label>
             <Textarea id="task-desc" value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder="Additional context or instructions..." />
           </div>
+          <div className="rounded-lg border border-gray-100 bg-gray-50/50 p-3 space-y-3">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox
+                checked={requiresSubmission}
+                onCheckedChange={(v) => setRequiresSubmission(v === true)}
+              />
+              <span className="text-sm font-medium text-gray-800">Require intern submission</span>
+            </label>
+            {requiresSubmission && (
+              <div className="space-y-1.5 pl-6">
+                <Label>Submission type</Label>
+                <Select
+                  value={submissionKind}
+                  onValueChange={(v) => setSubmissionKind(v as "TEXT" | "LINK" | "CONFIRMATION")}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SUBMISSION_KIND_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500">
+                  {SUBMISSION_KIND_OPTIONS.find((o) => o.value === submissionKind)?.description}
+                </p>
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>Week number</Label>

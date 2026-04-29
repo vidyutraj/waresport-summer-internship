@@ -9,6 +9,7 @@ import { CheckCircle2, Clock, AlertCircle, Megaphone, ArrowRight, Calendar } fro
 import Link from "next/link";
 import { formatDate, getCurrentProgramWeek } from "@/lib/utils";
 import { TaskCheckbox } from "@/components/shared/task-checkbox";
+import { canMarkTaskComplete } from "@/lib/submission-kind";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -23,7 +24,7 @@ export default async function DashboardPage() {
   const [assignments, announcements] = await Promise.all([
     prisma.taskAssignment.findMany({
       where: { userId },
-      include: { task: true },
+      include: { task: true, _count: { select: { submissions: true } } },
       orderBy: { task: { weekNumber: "asc" } },
     }),
     prisma.announcement.findMany({
@@ -116,6 +117,10 @@ export default async function DashboardPage() {
                         dueDate={assignment.task.dueDate}
                         completedAt={assignment.completedAt}
                         taskId={assignment.task.id}
+                        canMarkComplete={canMarkTaskComplete(
+                          assignment.task,
+                          assignment._count.submissions
+                        )}
                       />
                     </li>
                   ))}

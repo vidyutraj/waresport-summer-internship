@@ -13,7 +13,8 @@
     "db:seed:fresh": "SEED_RESET_DB=true tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "db:list-users": "tsx scripts/list-users.ts",
-    "db:clear-tasks": "tsx scripts/clear-tasks.ts"
+    "db:clear-tasks": "tsx scripts/clear-tasks.ts",
+    "db:ensure-submission-schema": "prisma db execute --file scripts/ensure-submission-schema.sql --schema prisma/schema.prisma"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

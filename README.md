@@ -116,8 +116,8 @@ Open [http://localhost:3000](http://localhost:3000)
 
 1. Create a Supabase project and get the `DATABASE_URL` (Transaction pooler recommended)
 2. Push to GitHub and connect to Vercel
-3. Set environment variables in Vercel dashboard
-4. Run `npx prisma migrate deploy` after first deployment
+3. Set environment variables in Vercel dashboard (including `DATABASE_URL`)
+4. Keep the database schema in sync with `prisma/schema.prisma`. If you use Prisma Migrate, run `npx prisma migrate deploy` against production. If the database was created without migrate history and pages crash after a deploy (e.g. Tasks), run **`scripts/ensure-submission-schema.sql`** in the Neon SQL editor, then redeploy.
 
 ### Railway
 

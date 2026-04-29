@@ -33,17 +33,21 @@ export function parseTaskSubmissionSettings(body: {
 }
 
 export function canMarkTaskComplete(
-  task: { requiresSubmission: boolean; submissionKind: SubmissionKind },
+  task: { requiresSubmission?: boolean | null; submissionKind?: SubmissionKind | null },
   submissionCount: number
 ): boolean {
-  if (!task.requiresSubmission || task.submissionKind === SubmissionKind.NONE) return true;
+  if (!task.requiresSubmission) return true;
+  const kind = task.submissionKind ?? SubmissionKind.NONE;
+  if (kind === SubmissionKind.NONE) return true;
   return submissionCount > 0;
 }
 
 export const SUBMIT_BEFORE_COMPLETE_HINT =
   "Submit your work on the task page before marking complete.";
 
-export function submissionKindShortLabel(kind: SubmissionKind): string {
+export function submissionKindShortLabel(
+  kind: SubmissionKind | string | null | undefined
+): string {
   switch (kind) {
     case "TEXT":
       return "Text";
@@ -52,6 +56,7 @@ export function submissionKindShortLabel(kind: SubmissionKind): string {
     case "CONFIRMATION":
       return "Confirm";
     case "NONE":
+      return "—";
     default:
       return "—";
   }

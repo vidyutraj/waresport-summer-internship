@@ -1,6 +1,17 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
+/**
+ * Middleware's getToken() picks the session cookie name from NEXTAUTH_URL's scheme.
+ * If Vercel still has NEXTAUTH_URL=http://localhost:3000, it looks for the wrong
+ * cookie while the API sets __Secure-next-auth.session-token on HTTPS — login
+ * appears to "do nothing". Align the cookie name with production HTTPS.
+ */
+const sessionTokenName =
+  process.env.VERCEL || process.env.NEXTAUTH_URL?.startsWith("https://")
+    ? "__Secure-next-auth.session-token"
+    : "next-auth.session-token";
+
 export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token;
@@ -21,6 +32,9 @@ export default withAuth(
   {
     callbacks: {
       authorized: ({ token }) => !!token,
+    },
+    cookies: {
+      sessionToken: { name: sessionTokenName },
     },
   }
 );

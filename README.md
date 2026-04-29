@@ -71,8 +71,11 @@ openssl rand -base64 32
 # Apply migrations
 npm run db:migrate
 
-# Seed the database with admin accounts
+# Seed the database (admins come from SEED_ADMIN_* in `.env` — see `.env.example`)
 npm run db:seed
+
+# Wipe all application data and reseed (destructive; use for a clean slate)
+npm run db:seed:fresh
 ```
 
 ### 4. Run the development server
@@ -83,15 +86,9 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000)
 
-## Default Accounts (after seed)
+## Admin accounts (after seed)
 
-| Role  | Email                     | Password   |
-|-------|---------------------------|------------|
-| Admin | devansh@waresport.com     | Admin123!  |
-| Admin | vidyut@waresport.com      | Admin123!  |
-| Intern | alex@example.com         | Intern123! |
-
-> Interns are prompted to change their password on first login.
+Admins are created from **`SEED_ADMIN_1_*`** and **`SEED_ADMIN_2_*`** in your `.env` (never committed). Use those emails and passwords to sign in. Add interns from the admin UI.
 
 ## Routes
 

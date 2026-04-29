@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
@@ -72,19 +73,64 @@ const MARKETING_WEEK1_TASKS: { title: string; description: string }[] = [
   },
 ];
 
-async function main() {
-  console.log("🌱 Seeding database...");
-
+function getSeedAdminsFromEnv() {
   const admins = [
-    { name: "Devansh", email: "devansh@waresport.com", password: "Admin123!" },
-    { name: "Vidyut", email: "vidyut@waresport.com", password: "Admin123!" },
+    {
+      name: process.env.SEED_ADMIN_1_NAME?.trim(),
+      email: process.env.SEED_ADMIN_1_EMAIL?.trim().toLowerCase(),
+      password: process.env.SEED_ADMIN_1_PASSWORD,
+    },
+    {
+      name: process.env.SEED_ADMIN_2_NAME?.trim(),
+      email: process.env.SEED_ADMIN_2_EMAIL?.trim().toLowerCase(),
+      password: process.env.SEED_ADMIN_2_PASSWORD,
+    },
   ];
+
+  for (let i = 0; i < admins.length; i++) {
+    const a = admins[i];
+    if (!a.name || !a.email || !a.password) {
+      throw new Error(
+        `Missing SEED_ADMIN_${i + 1}_NAME, SEED_ADMIN_${i + 1}_EMAIL, or SEED_ADMIN_${i + 1}_PASSWORD. See .env.example.`
+      );
+    }
+  }
+
+  return admins as { name: string; email: string; password: string }[];
+}
+
+async function clearAllApplicationData() {
+  await prisma.taskSubmission.deleteMany();
+  await prisma.taskAssignment.deleteMany();
+  await prisma.weeklyLog.deleteMany();
+  await prisma.task.deleteMany();
+  await prisma.resource.deleteMany();
+  await prisma.announcement.deleteMany();
+  await prisma.passwordResetToken.deleteMany();
+  await prisma.user.deleteMany();
+}
+
+async function main() {
+  const reset = process.env.SEED_RESET_DB === "true";
+  if (reset) {
+    console.log("🗑️  SEED_RESET_DB=true — deleting all users, tasks, logs, resources, announcements…");
+    await clearAllApplicationData();
+  }
+
+  console.log("🌱 Seeding database…");
+
+  const admins = getSeedAdminsFromEnv();
 
   for (const admin of admins) {
     const hash = await bcrypt.hash(admin.password, 12);
     await prisma.user.upsert({
       where: { email: admin.email },
-      update: {},
+      update: {
+        name: admin.name,
+        passwordHash: hash,
+        role: "ADMIN",
+        mustChangePassword: false,
+      },
       create: {
         name: admin.name,
         email: admin.email,
@@ -96,11 +142,9 @@ async function main() {
     console.log(`✅ Admin: ${admin.email}`);
   }
 
-  const devansh = await prisma.user.findUnique({ where: { email: "devansh@waresport.com" } });
-  if (!devansh) {
-    console.log("⚠️ No devansh user; skipping content seed.");
-    return;
-  }
+  const primary = await prisma.user.findUniqueOrThrow({
+    where: { email: admins[0].email },
+  });
 
   await prisma.resource.deleteMany({
     where: {
@@ -135,14 +179,14 @@ async function main() {
   for (const r of coreResources) {
     const exists = await prisma.resource.findFirst({ where: { title: r.title } });
     if (!exists) {
-      await prisma.resource.create({ data: { ...r, uploadedBy: devansh.id } });
+      await prisma.resource.create({ data: { ...r, uploadedBy: primary.id } });
     }
   }
   console.log("✅ Onboarding resources up to date");
 
   const deleted = await prisma.task.deleteMany({ where: { weekNumber: 1 } });
   if (deleted.count > 0) {
-    console.log(`🗑️ Removed ${deleted.count} previous Week 1 task(s)`);
+    console.log(`🗑️  Removed ${deleted.count} previous Week 1 task(s)`);
   }
 
   const marketingInterns = await prisma.user.findMany({
@@ -158,7 +202,7 @@ async function main() {
         weekNumber: 1,
         assignedTo: "TRACK",
         track: "Marketing",
-        createdBy: devansh.id,
+        createdBy: primary.id,
         dueDate: new Date("2026-05-10T23:59:59"),
       },
     });
@@ -170,7 +214,9 @@ async function main() {
     }
   }
 
-  console.log(`✅ Created ${MARKETING_WEEK1_TASKS.length} Marketing Week 1 tasks (assignments for ${marketingInterns.length} Marketing intern(s))`);
+  console.log(
+    `✅ Created ${MARKETING_WEEK1_TASKS.length} Marketing Week 1 tasks (assignments for ${marketingInterns.length} Marketing intern(s))`
+  );
 
   const annCount = await prisma.announcement.count();
   if (annCount === 0) {
@@ -179,7 +225,7 @@ async function main() {
         title: "Welcome to the Waresport internship 🚀",
         body:
           "Week 1 starts your Marketing onboarding tracker in Tasks. Complete the deck first, then work through accounts, reviews, and community tasks. Ask your manager for Review Site URLs where noted.",
-        createdBy: devansh.id,
+        createdBy: primary.id,
       },
     });
     console.log("✅ Welcome announcement created");
@@ -189,5 +235,8 @@ async function main() {
 }
 
 main()
-  .catch(console.error)
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
   .finally(() => prisma.$disconnect());

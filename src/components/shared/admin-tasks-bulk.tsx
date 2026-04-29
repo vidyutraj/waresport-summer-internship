@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CheckCircle2, Clock, Loader2, Pencil } from "lucide-react";
 import { EditTaskDialog } from "@/components/shared/edit-task-dialog";
+import { DeleteTaskButton } from "@/components/shared/delete-task-button";
 import { formatDate, TRACKS, getInitials } from "@/lib/utils";
 import { submissionKindShortLabel } from "@/lib/submission-kind";
 import type { SubmissionKind } from "@prisma/client";
@@ -253,6 +254,17 @@ export function AdminTasksBulkClient({
                               <Pencil className="h-4 w-4" />
                             </Button>
                           </EditTaskDialog>
+                          <DeleteTaskButton
+                            taskId={task.id}
+                            title={task.title}
+                            onDeleted={(id) =>
+                              setSelected((prev) => {
+                                const next = new Set(prev);
+                                next.delete(id);
+                                return next;
+                              })
+                            }
+                          />
                           <CheckCircle2 className="h-4 w-4 text-green-500" />
                           <span className="text-sm font-medium">
                             {completed}/{total}

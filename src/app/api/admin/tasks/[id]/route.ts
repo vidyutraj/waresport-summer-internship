@@ -143,3 +143,23 @@ export async function PATCH(
 
   return NextResponse.json(updated);
 }
+
+export async function DELETE(
+  _req: Request,
+  { params }: { params: { id: string } }
+) {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== "ADMIN") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const existing = await prisma.task.findUnique({ where: { id: params.id } });
+  if (!existing) {
+    return NextResponse.json({ error: "Task not found" }, { status: 404 });
+  }
+
+  // Cascades: TaskAssignment → TaskSubmission (see schema onDelete: Cascade)
+  await prisma.task.delete({ where: { id: params.id } });
+
+  return NextResponse.json({ success: true });
+}

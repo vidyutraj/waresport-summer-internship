@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn, useSession } from "next-auth/react";
+import { getSession, signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Zap, Loader2 } from "lucide-react";
@@ -35,14 +35,36 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
 
-    if (result?.error) {
-      setError("Invalid email or password");
+      if (result?.error) {
+        setError("Invalid email or password");
+        return;
+      }
+
+      if (!result?.ok) {
+        setError("Could not sign in. Try again.");
+        return;
+      }
+
+      // App Router: refresh so SessionProvider picks up the new cookie; then navigate.
+      router.refresh();
+      const sessionAfter = await getSession();
+      if (sessionAfter?.user?.mustChangePassword) {
+        router.push("/change-password");
+      } else if (sessionAfter?.user?.role === "ADMIN") {
+        router.push("/admin");
+      } else {
+        router.push("/dashboard");
+      }
+    } catch {
+      setError("Something went wrong. Check your connection and try again.");
+    } finally {
       setLoading(false);
     }
   }

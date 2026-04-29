@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Plus, ExternalLink, Star } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { CreateResourceDialog } from "@/components/shared/create-resource-dialog";
+import { EditResourceDialog } from "@/components/shared/edit-resource-dialog";
+import { DeleteResourceButton } from "@/components/shared/delete-resource-button";
 
 export default async function AdminResourcesPage() {
   const session = await getServerSession(authOptions);
@@ -45,7 +47,11 @@ export default async function AdminResourcesPage() {
               <CardContent className="p-5">
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <h3 className="text-sm font-semibold text-gray-900 line-clamp-2">{resource.title}</h3>
-                  {resource.isRequired && <Star className="h-4 w-4 text-amber-500 fill-amber-500 shrink-0" />}
+                  <div className="flex items-center gap-0.5 shrink-0">
+                    {resource.isRequired && <Star className="h-4 w-4 text-amber-500 fill-amber-500" />}
+                    <EditResourceDialog resource={resource} />
+                    <DeleteResourceButton resourceId={resource.id} title={resource.title} />
+                  </div>
                 </div>
                 {resource.description && (
                   <p className="text-xs text-gray-500 line-clamp-2 mb-3">{resource.description}</p>

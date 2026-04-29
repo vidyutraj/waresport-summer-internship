@@ -11,8 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
-
-const CATEGORIES = ["Onboarding", "Product Overview", "Market Research", "How-To Guides", "Engineering", "Design", "Other"];
+import { RESOURCE_CATEGORIES } from "@/lib/resource-categories";
 
 export function CreateResourceDialog({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -74,7 +73,7 @@ export function CreateResourceDialog({ children }: { children: React.ReactNode }
                 <SelectValue placeholder="Select a category" />
               </SelectTrigger>
               <SelectContent>
-                {CATEGORIES.map((c) => (
+                {RESOURCE_CATEGORIES.map((c) => (
                   <SelectItem key={c} value={c}>{c}</SelectItem>
                 ))}
               </SelectContent>

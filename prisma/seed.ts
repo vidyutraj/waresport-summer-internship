@@ -112,15 +112,7 @@ async function main() {
     },
   });
 
-  const coreResources: never[] = [];
-
-  for (const r of coreResources) {
-    const exists = await prisma.resource.findFirst({ where: { title: r.title } });
-    if (!exists) {
-      await prisma.resource.create({ data: { ...r, uploadedBy: primary.id } });
-    }
-  }
-  console.log("✅ Onboarding resources up to date (tasks are not seeded — add them in admin)");
+  console.log("✅ Resources up to date (add resources in admin)");
 
   const annCount = await prisma.announcement.count();
   if (annCount === 0) {

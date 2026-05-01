@@ -222,11 +222,6 @@ export function CreateTaskDialog({ children }: { children: React.ReactNode }) {
             <Label htmlFor="due-date">Due date (optional)</Label>
             <Input id="due-date" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
           </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="due-date">Due date (optional)</Label>
-              <Input id="due-date" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
-            </div>
-          </div>
 
           {/* Assignment type */}
           <div className="space-y-1.5">

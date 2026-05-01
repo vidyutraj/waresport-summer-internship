@@ -234,21 +234,6 @@ export function CreateTaskDialog({ children }: { children: React.ReactNode }) {
             </Select>
           </div>
 
-          {/* Track selector */}
-          {assignedTo === "TRACK" && (
-            <div className="space-y-1.5">
-              <Label>Track</Label>
-              <Select value={track} onValueChange={setTrack}>
-                <SelectTrigger><SelectValue placeholder="Select track" /></SelectTrigger>
-                <SelectContent>
-                  {TRACKS.map((t) => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
           {/* Individual intern(s) multi-select */}
           {assignedTo === "INDIVIDUAL" && (
             <div className="space-y-2">
@@ -280,7 +265,7 @@ export function CreateTaskDialog({ children }: { children: React.ReactNode }) {
                   <Search className="h-3.5 w-3.5 text-gray-400 shrink-0" />
                   <input
                     type="text"
-                    placeholder="Search by name, email, or track..."
+                    placeholder="Search by name or email..."
                     value={internSearch}
                     onChange={(e) => setInternSearch(e.target.value)}
                     className="flex-1 text-sm bg-transparent outline-none placeholder:text-gray-400"
@@ -310,10 +295,7 @@ export function CreateTaskDialog({ children }: { children: React.ReactNode }) {
                         </div>
                         <div className="flex-1 min-w-0 text-left">
                           <p className="text-sm font-medium text-gray-900">{intern.name}</p>
-                          <p className="text-xs text-gray-500 truncate">
-                            {intern.email}
-                            {intern.track ? ` · ${intern.track}` : ""}
-                          </p>
+                          <p className="text-xs text-gray-500 truncate">{intern.email}</p>
                         </div>
                       </label>
                     ))

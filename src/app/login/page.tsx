@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { getSession, signIn, useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Zap, Loader2 } from "lucide-react";
@@ -52,16 +52,9 @@ export default function LoginPage() {
         return;
       }
 
-      // App Router: refresh so SessionProvider picks up the new cookie; then navigate.
-      router.refresh();
-      const sessionAfter = await getSession();
-      if (sessionAfter?.user?.mustChangePassword) {
-        router.push("/change-password");
-      } else if (sessionAfter?.user?.role === "ADMIN") {
-        router.push("/admin");
-      } else {
-        router.push("/dashboard");
-      }
+      // Full page navigation: getSession() after signIn often returns null in App Router before
+      // the browser applies Set-Cookie, so client-side router.push never ran.
+      window.location.assign("/post-login");
     } catch {
       setError("Something went wrong. Check your connection and try again.");
     } finally {

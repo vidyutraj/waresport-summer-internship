@@ -17,6 +17,7 @@ import {
   Users2,
 } from "lucide-react";
 import { cn, getInitials } from "@/lib/utils";
+import { SocialLinksBar } from "@/components/shared/SocialLinksBar";
 
 const internNav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -105,6 +106,9 @@ export function Sidebar() {
           })}
         </ul>
       </nav>
+
+      {/* Social links */}
+      <div className="px-4 pb-2"><SocialLinksBar /></div>
 
       {/* User section */}
       <div className="border-t border-gray-100 p-4">

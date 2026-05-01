@@ -37,12 +37,24 @@ export async function POST(req: Request) {
     },
   });
 
-  // Send welcome email (non-blocking — don't fail the request if email fails)
-  sendWelcomeEmail({ name, email: normalizedEmail, tempPassword }).catch((err) => {
-    console.error("Failed to send welcome email:", JSON.stringify(err, null, 2));
-  });
+  let emailSent = false;
+  let emailError: string | undefined;
+  try {
+    await sendWelcomeEmail({ name, email: normalizedEmail, tempPassword });
+    emailSent = true;
+  } catch (err) {
+    console.error("Welcome email failed:", err);
+    emailError =
+      err instanceof Error ? err.message : typeof err === "string" ? err : "Unknown error";
+  }
 
-  return NextResponse.json({ success: true, email: user.email, tempPassword });
+  return NextResponse.json({
+    success: true,
+    email: user.email,
+    tempPassword,
+    emailSent,
+    ...(emailError ? { emailError } : {}),
+  });
 }
 
 export async function GET() {

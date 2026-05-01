@@ -30,7 +30,11 @@ export async function POST(req: Request) {
     data: { email: normalized, token, expiresAt },
   });
 
-  await sendPasswordResetEmail({ name: user.name, email: normalized, token });
+  try {
+    await sendPasswordResetEmail({ name: user.name, email: normalized, token });
+  } catch (err) {
+    console.error("Password reset email failed:", err);
+  }
 
   return NextResponse.json({ success: true });
 }

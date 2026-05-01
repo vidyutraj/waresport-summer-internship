@@ -21,7 +21,12 @@ export function CreateInternDialog({ children }: { children: React.ReactNode }) 
   const [tempPassword, setTempPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [created, setCreated] = useState<{ email: string; tempPassword: string } | null>(null);
+  const [created, setCreated] = useState<{
+    email: string;
+    tempPassword: string;
+    emailSent: boolean;
+    emailError?: string;
+  } | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -36,7 +41,12 @@ export function CreateInternDialog({ children }: { children: React.ReactNode }) 
 
     if (res.ok) {
       const data = await res.json();
-      setCreated({ email: data.email, tempPassword: data.tempPassword });
+      setCreated({
+        email: data.email,
+        tempPassword: data.tempPassword,
+        emailSent: Boolean(data.emailSent),
+        emailError: typeof data.emailError === "string" ? data.emailError : undefined,
+      });
       router.refresh();
     } else {
       const data = await res.json();
@@ -70,6 +80,22 @@ export function CreateInternDialog({ children }: { children: React.ReactNode }) 
               </div>
               <p className="text-xs text-green-600 mt-2">They will be prompted to change their password on first login.</p>
             </div>
+            {!created.emailSent && (
+              <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                <p className="font-medium">Welcome email was not sent.</p>
+                {created.emailError && (
+                  <p className="mt-2 text-xs font-mono text-amber-950/90 break-words whitespace-pre-wrap">
+                    {created.emailError}
+                  </p>
+                )}
+                <p className="text-xs mt-2 text-amber-800/90">
+                  On Vercel the app sends only via SendGrid (HTTPS). Set{" "}
+                  <code className="text-[11px]">SENDGRID_API_KEY</code> and{" "}
+                  <code className="text-[11px]">SENDGRID_FROM_EMAIL</code> on <strong>Production</strong>, redeploy, and
+                  match your verified Single Sender. SMTP is for local dev only. Check SendGrid Activity and Vercel logs.
+                </p>
+              </div>
+            )}
             <Button onClick={handleClose} className="w-full">Done</Button>
           </div>
         ) : (

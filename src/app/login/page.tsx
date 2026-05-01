@@ -5,7 +5,6 @@ import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { Zap, Loader2 } from "lucide-react";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -135,17 +134,9 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-[#212529]">
+              <Label htmlFor="password" className="text-[#212529]">
                   Password
                 </Label>
-                <Link
-                  href="/forgot-password"
-                  className="text-xs text-brand-600 hover:text-brand-700 transition-colors font-medium"
-                >
-                  Forgot password?
-                </Link>
-              </div>
               <Input
                 id="password"
                 type="password"

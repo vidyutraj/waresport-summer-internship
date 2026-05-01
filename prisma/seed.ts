@@ -73,9 +73,30 @@ async function main() {
     console.log(`✅ Admin: ${admin.email}`);
   }
 
-  const primary = await prisma.user.findUniqueOrThrow({
+  const primaryAdmin = await prisma.user.findUniqueOrThrow({
     where: { email: admins[0].email },
   });
+
+  // Hardcoded intern accounts
+  const interns = [
+    { name: "Joseph Parli",  email: "josephparli@waresport.com",  password: "Waresport2025!" },
+    { name: "Catherine",     email: "catherine@waresport.com",    password: "Waresport2025!" },
+    { name: "David Z.",      email: "davidz@waresport.com",       password: "Waresport2025!" },
+    { name: "Olivia Mohil",  email: "oliviamohil@waresport.com",  password: "Waresport2025!" },
+    { name: "Paul Hoch",     email: "paulhoch@waresport.com",     password: "Waresport2025!" },
+    { name: "Cecilia",       email: "cecilia@waresport.com",      password: "Waresport2025!" },
+    { name: "Elilahal",      email: "elilahal@waresport.com",     password: "Waresport2025!" },
+  ];
+
+  for (const intern of interns) {
+    const hash = await bcrypt.hash(intern.password, 12);
+    await prisma.user.upsert({
+      where: { email: intern.email },
+      update: { name: intern.name, passwordHash: hash, role: "INTERN", mustChangePassword: false },
+      create: { name: intern.name, email: intern.email, passwordHash: hash, role: "INTERN", mustChangePassword: false },
+    });
+    console.log(`✅ Intern: ${intern.email}`);
+  }
 
   await prisma.resource.deleteMany({
     where: {
@@ -84,28 +105,14 @@ async function main() {
           "Welcome to Waresport",
           "Company Overview Deck",
           "Market Research Report",
+          "Marketing Intern Onboarding Deck",
+          "AI Prompt Guide",
         ],
       },
     },
   });
 
-  const coreResources = [
-    {
-      title: "Marketing Intern Onboarding Deck",
-      category: "Onboarding",
-      url: "https://notion.so",
-      isRequired: true,
-      description: "Work through the full deck before other Week 1 tasks.",
-    },
-    {
-      title: "AI Prompt Guide",
-      category: "Onboarding",
-      url: "https://notion.so",
-      isRequired: true,
-      description:
-        "Use for authentic Reddit & Quora answers — do not identify as Waresport staff.",
-    },
-  ];
+  const coreResources: never[] = [];
 
   for (const r of coreResources) {
     const exists = await prisma.resource.findFirst({ where: { title: r.title } });
@@ -122,7 +129,7 @@ async function main() {
         title: "Welcome to the Waresport internship 🚀",
         body:
           "Check Tasks and Resources for your weekly work. Your admins will post updates here.",
-        createdBy: primary.id,
+        createdBy: primaryAdmin.id,
       },
     });
     console.log("✅ Welcome announcement created");

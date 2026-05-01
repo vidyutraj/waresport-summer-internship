@@ -28,7 +28,7 @@ export function CreateTaskDialog({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [weekNumber, setWeekNumber] = useState("1");
+  const [selectedWeeks, setSelectedWeeks] = useState<Set<number>>(new Set([1]));
   const [dueDate, setDueDate] = useState("");
   const [assignedTo, setAssignedTo] = useState("ALL");
   const [track, setTrack] = useState("");
@@ -54,7 +54,7 @@ export function CreateTaskDialog({ children }: { children: React.ReactNode }) {
   }, [open]);
 
   function reset() {
-    setTitle(""); setDescription(""); setWeekNumber("1"); setDueDate("");
+    setTitle(""); setDescription(""); setSelectedWeeks(new Set([1])); setDueDate("");
     setAssignedTo("ALL"); setTrack(""); setSelectedInternIds(new Set()); setInternSearch(""); setError("");
     setRequiresSubmission(false); setSubmissionKind("TEXT");
   }
@@ -65,33 +65,43 @@ export function CreateTaskDialog({ children }: { children: React.ReactNode }) {
       setError("Select at least one intern");
       return;
     }
+    if (selectedWeeks.size === 0) {
+      setError("Select at least one week");
+      return;
+    }
     setLoading(true);
     setError("");
 
-    const res = await fetch("/api/admin/tasks", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        title, description,
-        weekNumber: parseInt(weekNumber),
-        dueDate: dueDate || null,
-        assignedTo,
-        track: assignedTo === "TRACK" ? track : null,
-        assignedUserIds:
-          assignedTo === "INDIVIDUAL" ? Array.from(selectedInternIds) : undefined,
-        requiresSubmission,
-        submissionKind: requiresSubmission ? submissionKind : "NONE",
-      }),
-    });
+    const weeks = Array.from(selectedWeeks).sort((a, b) => a - b);
 
-    if (res.ok) {
-      setOpen(false);
-      reset();
-      router.refresh();
-    } else {
-      const data = await res.json();
-      setError(data.error ?? "Failed to create task");
+    for (const week of weeks) {
+      const res = await fetch("/api/admin/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title, description,
+          weekNumber: week,
+          dueDate: dueDate || null,
+          assignedTo,
+          track: assignedTo === "TRACK" ? track : null,
+          assignedUserIds:
+            assignedTo === "INDIVIDUAL" ? Array.from(selectedInternIds) : undefined,
+          requiresSubmission,
+          submissionKind: requiresSubmission ? submissionKind : "NONE",
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error ?? `Failed to create task for week ${week}`);
+        setLoading(false);
+        return;
+      }
     }
+
+    setOpen(false);
+    reset();
+    router.refresh();
     setLoading(false);
   }
 
@@ -159,18 +169,59 @@ export function CreateTaskDialog({ children }: { children: React.ReactNode }) {
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label>Week number</Label>
-              <Select value={weekNumber} onValueChange={setWeekNumber}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
+          <div className="space-y-1.5">
+              <Label>Week(s)</Label>
+              <div className="rounded-lg border border-gray-200 p-3">
+                <div className="grid grid-cols-4 gap-2">
                   {Array.from({ length: 12 }, (_, i) => i + 1).map((w) => (
-                    <SelectItem key={w} value={String(w)}>Week {w}</SelectItem>
+                    <label
+                      key={w}
+                      className="flex items-center gap-1.5 cursor-pointer select-none"
+                    >
+                      <Checkbox
+                        checked={selectedWeeks.has(w)}
+                        onCheckedChange={(checked) => {
+                          setSelectedWeeks((prev) => {
+                            const next = new Set(prev);
+                            if (checked) next.add(w);
+                            else next.delete(w);
+                            return next;
+                          });
+                        }}
+                      />
+                      <span className="text-sm text-gray-700">W{w}</span>
+                    </label>
                   ))}
-                </SelectContent>
-              </Select>
+                </div>
+                <div className="flex gap-2 mt-2 pt-2 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedWeeks(new Set(Array.from({ length: 12 }, (_, i) => i + 1)))}
+                    className="text-xs text-brand-600 hover:text-brand-700"
+                  >
+                    Select all
+                  </button>
+                  <span className="text-xs text-gray-300">·</span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedWeeks(new Set())}
+                    className="text-xs text-gray-500 hover:text-gray-700"
+                  >
+                    Clear
+                  </button>
+                  {selectedWeeks.size > 0 && (
+                    <span className="text-xs text-gray-400 ml-auto">
+                      {selectedWeeks.size} week{selectedWeeks.size > 1 ? "s" : ""} selected
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="due-date">Due date (optional)</Label>
+            <Input id="due-date" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
+          </div>
             <div className="space-y-1.5">
               <Label htmlFor="due-date">Due date (optional)</Label>
               <Input id="due-date" type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
@@ -291,6 +342,7 @@ export function CreateTaskDialog({ children }: { children: React.ReactNode }) {
               type="submit"
               disabled={
                 loading ||
+                selectedWeeks.size === 0 ||
                 (assignedTo === "TRACK" && !track) ||
                 (assignedTo === "INDIVIDUAL" && selectedInternIds.size === 0)
               }

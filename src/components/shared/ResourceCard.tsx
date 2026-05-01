@@ -46,9 +46,9 @@ export function ResourceCard({
           )}
         </div>
 
-        {/* Description */}
+        {/* Description — truncated preview */}
         {resource.description && (
-          <p className="text-xs text-gray-500 mb-3">
+          <p className="text-xs text-gray-500 line-clamp-3 mb-3">
             {resource.description}
           </p>
         )}

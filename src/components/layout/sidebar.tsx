@@ -76,7 +76,7 @@ export function Sidebar() {
             isAdmin ? "bg-brand-100 text-brand-800" : "bg-gray-100 text-[#6C757D]"
           )}
         >
-          {isAdmin ? "Admin" : `Intern · ${session?.user?.track ?? "Unassigned"}`}
+          {isAdmin ? "Admin" : "Intern"}
         </span>
       </div>
 

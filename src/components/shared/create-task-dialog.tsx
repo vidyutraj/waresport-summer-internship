@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Search, X } from "lucide-react";
-import { TRACKS, getInitials } from "@/lib/utils";
+import { getInitials } from "@/lib/utils";
 import { SUBMISSION_KIND_OPTIONS } from "@/lib/submission-kind";
 
 interface Intern {
@@ -31,7 +31,6 @@ export function CreateTaskDialog({ children }: { children: React.ReactNode }) {
   const [selectedWeeks, setSelectedWeeks] = useState<Set<number>>(new Set([1]));
   const [dueDate, setDueDate] = useState("");
   const [assignedTo, setAssignedTo] = useState("ALL");
-  const [track, setTrack] = useState("");
   const [selectedInternIds, setSelectedInternIds] = useState<Set<string>>(new Set());
   const [internSearch, setInternSearch] = useState("");
   const [interns, setInterns] = useState<Intern[]>([]);
@@ -55,7 +54,7 @@ export function CreateTaskDialog({ children }: { children: React.ReactNode }) {
 
   function reset() {
     setTitle(""); setDescription(""); setSelectedWeeks(new Set([1])); setDueDate("");
-    setAssignedTo("ALL"); setTrack(""); setSelectedInternIds(new Set()); setInternSearch(""); setError("");
+    setAssignedTo("ALL"); setSelectedInternIds(new Set()); setInternSearch(""); setError("");
     setRequiresSubmission(false); setSubmissionKind("TEXT");
   }
 
@@ -83,7 +82,7 @@ export function CreateTaskDialog({ children }: { children: React.ReactNode }) {
           weekNumber: week,
           dueDate: dueDate || null,
           assignedTo,
-          track: assignedTo === "TRACK" ? track : null,
+          track: null,
           assignedUserIds:
             assignedTo === "INDIVIDUAL" ? Array.from(selectedInternIds) : undefined,
           requiresSubmission,
@@ -226,11 +225,10 @@ export function CreateTaskDialog({ children }: { children: React.ReactNode }) {
           {/* Assignment type */}
           <div className="space-y-1.5">
             <Label>Assign to</Label>
-            <Select value={assignedTo} onValueChange={(v) => { setAssignedTo(v); setSelectedInternIds(new Set()); setTrack(""); }}>
+            <Select value={assignedTo} onValueChange={(v) => { setAssignedTo(v); setSelectedInternIds(new Set()); }}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="ALL">All interns</SelectItem>
-                <SelectItem value="TRACK">Specific track</SelectItem>
                 <SelectItem value="INDIVIDUAL">Specific intern(s)</SelectItem>
               </SelectContent>
             </Select>
@@ -338,7 +336,6 @@ export function CreateTaskDialog({ children }: { children: React.ReactNode }) {
               disabled={
                 loading ||
                 selectedWeeks.size === 0 ||
-                (assignedTo === "TRACK" && !track) ||
                 (assignedTo === "INDIVIDUAL" && selectedInternIds.size === 0)
               }
             >

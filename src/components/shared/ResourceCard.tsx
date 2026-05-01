@@ -38,7 +38,7 @@ export function ResourceCard({
       <CardContent className="p-5">
         {/* Header row: title + required star */}
         <div className="flex items-start justify-between gap-2 mb-2">
-          <h3 className="text-sm font-semibold text-gray-900 line-clamp-2">
+          <h3 className="text-sm font-semibold text-gray-900">
             {resource.title}
           </h3>
           {resource.isRequired && (
@@ -48,7 +48,7 @@ export function ResourceCard({
 
         {/* Description */}
         {resource.description && (
-          <p className="text-xs text-gray-500 line-clamp-2 mb-3">
+          <p className="text-xs text-gray-500 mb-3">
             {resource.description}
           </p>
         )}

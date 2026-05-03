@@ -3,9 +3,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { AppLayout } from "@/components/layout/app-layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { TaskCheckbox } from "@/components/shared/task-checkbox";
+import { WeekSection } from "@/components/shared/week-section";
 import { getCurrentProgramWeek } from "@/lib/utils";
 import { canMarkTaskComplete } from "@/lib/submission-kind";
 
@@ -45,43 +44,37 @@ export default async function TasksPage() {
           <p>No tasks assigned yet. Check back soon.</p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-3">
           {weeks.map((week) => {
             const tasks = groupedByWeek[week];
             const completed = tasks.filter((t) => t.completedAt).length;
             const isCurrentWeek = week === currentWeek;
             return (
-              <Card key={week}>
-                <CardHeader className="flex flex-row items-center justify-between pb-3">
-                  <div className="flex items-center gap-3">
-                    <CardTitle className="text-base">Week {week}</CardTitle>
-                    {isCurrentWeek && <Badge variant="default">Current</Badge>}
-                  </div>
-                  <span className="text-sm text-gray-500">
-                    {completed}/{tasks.length} completed
-                  </span>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {tasks.map((assignment) => (
-                      <li key={assignment.id}>
-                        <TaskCheckbox
-                          assignmentId={assignment.id}
-                          title={assignment.task.title}
-                          description={assignment.task.description}
-                          dueDate={assignment.task.dueDate}
-                          completedAt={assignment.completedAt}
-                          taskId={assignment.task.id}
-                          canMarkComplete={canMarkTaskComplete(
-                            assignment.task,
-                            assignment._count.submissions
-                          )}
-                        />
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
+              <WeekSection
+                key={week}
+                week={week}
+                completed={completed}
+                total={tasks.length}
+                isCurrentWeek={isCurrentWeek}
+                defaultOpen={isCurrentWeek}
+              >
+                {tasks.map((assignment) => (
+                  <li key={assignment.id}>
+                    <TaskCheckbox
+                      assignmentId={assignment.id}
+                      title={assignment.task.title}
+                      description={assignment.task.description}
+                      dueDate={assignment.task.dueDate}
+                      completedAt={assignment.completedAt}
+                      taskId={assignment.task.id}
+                      canMarkComplete={canMarkTaskComplete(
+                        assignment.task,
+                        assignment._count.submissions
+                      )}
+                    />
+                  </li>
+                ))}
+              </WeekSection>
             );
           })}
         </div>

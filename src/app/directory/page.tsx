@@ -5,7 +5,6 @@ import { redirect } from "next/navigation";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent } from "@/components/ui/card";
 import { getInitials } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import { Link2, Mail } from "lucide-react";
 
 export default async function DirectoryPage() {
@@ -18,7 +17,6 @@ export default async function DirectoryPage() {
       id: true,
       name: true,
       email: true,
-      track: true,
       linkedin: true,
       bio: true,
       avatarUrl: true,
@@ -57,11 +55,6 @@ export default async function DirectoryPage() {
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="font-semibold text-gray-900">{person.name}</p>
-                    {person.track && (
-                      <Badge variant="outline" className="mt-1 text-xs">
-                        {person.track}
-                      </Badge>
-                    )}
                     <a
                       href={`mailto:${person.email}`}
                       className="mt-2 flex items-center gap-1.5 text-xs text-gray-500 hover:text-brand-600"

@@ -88,6 +88,7 @@ async function main() {
     { name: "Elilah",      email: "elilah@waresport.com",       password: "Waresport2025!" },
     { name: "Tinsley",     email: "tinsley@waresport.com",      password: "Waresport2025!" },
     { name: "Sebastian",   email: "sebastian@waresport.com",    password: "Waresport2025!" },
+    { name: "Alyssa",      email: "alyssa@waresport.com",       password: "Waresport2025!" },
   ];
 
   for (const intern of interns) {

@@ -50,7 +50,6 @@ export function AdminTasksBulkClient({
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [mode] = useState<"INTERNS">("INTERNS");
   const [interns, setInterns] = useState<InternOpt[]>([]);
   const [selectedInterns, setSelectedInterns] = useState<Set<string>>(new Set());
   const [loadingInterns, setLoadingInterns] = useState(false);

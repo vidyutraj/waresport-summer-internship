@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,11 +14,11 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CheckCircle2, Clock, Loader2, Pencil } from "lucide-react";
 import { EditTaskDialog } from "@/components/shared/edit-task-dialog";
 import { DeleteTaskButton } from "@/components/shared/delete-task-button";
-import { formatDate, TRACKS, getInitials } from "@/lib/utils";
+import { WeekSection } from "@/components/shared/week-section";
+import { formatDate, getInitials } from "@/lib/utils";
 import { submissionKindShortLabel } from "@/lib/submission-kind";
 import type { SubmissionKind } from "@prisma/client";
 
@@ -51,8 +50,7 @@ export function AdminTasksBulkClient({
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [mode, setMode] = useState<"TRACK" | "INTERNS">("TRACK");
-  const [track, setTrack] = useState("");
+  const [mode] = useState<"INTERNS">("INTERNS");
   const [interns, setInterns] = useState<InternOpt[]>([]);
   const [selectedInterns, setSelectedInterns] = useState<Set<string>>(new Set());
   const [loadingInterns, setLoadingInterns] = useState(false);
@@ -66,17 +64,6 @@ export function AdminTasksBulkClient({
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
-      return next;
-    });
-  }
-
-  function toggleAllInWeek(week: number, taskList: TaskRow[]) {
-    const ids = taskList.map((t) => t.id);
-    const allOn = ids.every((id) => selected.has(id));
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (allOn) ids.forEach((id) => next.delete(id));
-      else ids.forEach((id) => next.add(id));
       return next;
     });
   }
@@ -109,17 +96,9 @@ export function AdminTasksBulkClient({
   async function runBulkAssign() {
     setSubmitting(true);
     setError("");
-    const body =
-      mode === "TRACK"
-        ? { taskIds: selectedIds, mode: "TRACK" as const, track }
-        : { taskIds: selectedIds, mode: "INTERNS" as const, userIds: Array.from(selectedInterns) };
+    const body = { taskIds: selectedIds, mode: "INTERNS" as const, userIds: Array.from(selectedInterns) };
 
-    if (mode === "TRACK" && !track) {
-      setError("Choose a track");
-      setSubmitting(false);
-      return;
-    }
-    if (mode === "INTERNS" && selectedInterns.size === 0) {
+    if (selectedInterns.size === 0) {
       setError("Select at least one intern");
       setSubmitting(false);
       return;
@@ -169,33 +148,28 @@ export function AdminTasksBulkClient({
         </div>
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-3">
         {weeks.map((week) => {
           const list = groupedByWeek[week];
+          const completed = list.reduce((sum, t) => sum + t.assignments.filter(a => a.completedAt).length, 0);
+          const total = list.reduce((sum, t) => sum + t.assignments.length, 0);
           return (
-            <Card key={week}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-base">Week {week}</CardTitle>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs text-gray-500"
-                  onClick={() => toggleAllInWeek(week, list)}
-                >
-                  {list.every((t) => selected.has(t.id)) ? "Deselect all" : "Select all"}
-                </Button>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {list.map((task) => {
-                    const completed = task.assignments.filter((a) => a.completedAt).length;
-                    const total = task.assignments.length;
+            <WeekSection
+              key={week}
+              week={week}
+              completed={completed}
+              total={total}
+              isCurrentWeek={false}
+              defaultOpen={week === Math.max(...weeks)}
+            >
+              {list.map((task) => {
+                    const taskCompleted = task.assignments.filter((a) => a.completedAt).length;
+                    const taskTotal = task.assignments.length;
                     const overdue = task.dueDate && new Date(task.dueDate) < new Date();
                     const isOn = selected.has(task.id);
 
                     return (
-                      <div
+                      <li
                         key={task.id}
                         className={`flex items-start gap-3 rounded-lg border p-4 transition-colors ${
                           isOn ? "border-brand-300 bg-brand-50/40" : "border-gray-100 hover:border-gray-200"
@@ -213,9 +187,6 @@ export function AdminTasksBulkClient({
                             <h3 className="text-sm font-semibold text-gray-900">{task.title}</h3>
                             {overdue && <Badge variant="destructive">Overdue</Badge>}
                             {task.assignedTo === "ALL" && <Badge variant="outline">All interns</Badge>}
-                            {task.assignedTo === "TRACK" && task.track && (
-                              <Badge variant="secondary">{task.track} track</Badge>
-                            )}
                             {task.assignedTo === "INDIVIDUAL" && (
                               <Badge variant="default">
                                 {task.assignments.length > 1
@@ -267,15 +238,13 @@ export function AdminTasksBulkClient({
                           />
                           <CheckCircle2 className="h-4 w-4 text-green-500" />
                           <span className="text-sm font-medium">
-                            {completed}/{total}
+                            {taskCompleted}/{taskTotal}
                           </span>
                         </div>
-                      </div>
+                      </li>
                     );
                   })}
-                </div>
-              </CardContent>
-            </Card>
+            </WeekSection>
           );
         })}
       </div>
@@ -291,76 +260,36 @@ export function AdminTasksBulkClient({
 
           <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label>Assign to</Label>
-              <Select
-                value={mode}
-                onValueChange={(v) => setMode(v as "TRACK" | "INTERNS")}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="TRACK">Everyone on a track</SelectItem>
-                  <SelectItem value="INTERNS">Selected interns</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Interns</Label>
+              {loadingInterns ? (
+                <div className="flex justify-center py-6">
+                  <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                </div>
+              ) : (
+                <div className="max-h-56 overflow-y-auto rounded-lg border border-gray-200 divide-y">
+                  {interns.map((i) => (
+                    <label
+                      key={i.id}
+                      className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-gray-50"
+                    >
+                      <Checkbox
+                        checked={selectedInterns.has(i.id)}
+                        onCheckedChange={() => toggleIntern(i.id)}
+                      />
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-brand-700 text-xs font-semibold">
+                        {getInitials(i.name)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900">{i.name}</p>
+                        <p className="text-xs text-gray-500 truncate">{i.email}</p>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {mode === "TRACK" && (
-              <div className="space-y-2">
-                <Label>Track</Label>
-                <Select value={track} onValueChange={setTrack}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Choose track" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TRACKS.map((t) => (
-                      <SelectItem key={t} value={t}>
-                        {t}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {mode === "INTERNS" && (
-              <div className="space-y-2">
-                <Label>Interns</Label>
-                {loadingInterns ? (
-                  <div className="flex justify-center py-6">
-                    <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
-                  </div>
-                ) : (
-                  <div className="max-h-56 overflow-y-auto rounded-lg border border-gray-200 divide-y">
-                    {interns.map((i) => (
-                      <label
-                        key={i.id}
-                        className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-gray-50"
-                      >
-                        <Checkbox
-                          checked={selectedInterns.has(i.id)}
-                          onCheckedChange={() => toggleIntern(i.id)}
-                        />
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-brand-700 text-xs font-semibold">
-                          {getInitials(i.name)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900">{i.name}</p>
-                          <p className="text-xs text-gray-500 truncate">
-                            {i.track ?? "No track"} · {i.email}
-                          </p>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {error && (
-              <p className="text-sm text-red-600">{error}</p>
-            )}
+            {error && <p className="text-sm text-red-600">{error}</p>}
           </div>
 
           <DialogFooter>

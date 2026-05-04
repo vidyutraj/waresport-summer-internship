@@ -79,28 +79,44 @@ async function main() {
 
   // Hardcoded intern accounts
   const interns = [
-    { name: "Joseph Parli",  email: "josephparli@waresport.com",  password: "Waresport2025!" },
-    { name: "Catherine",     email: "catherine@waresport.com",    password: "Waresport2025!" },
-    { name: "David Z.",      email: "davidz@waresport.com",       password: "Waresport2025!" },
-    { name: "Olivia Mohil",  email: "oliviamohil@waresport.com",  password: "Waresport2025!" },
-    { name: "Paul Hoch",     email: "paulhoch@waresport.com",     password: "Waresport2025!" },
-    { name: "Cecilia",       email: "cecilia@waresport.com",      password: "Waresport2025!" },
-    { name: "Elilah",      email: "elilah@waresport.com",       password: "Waresport2025!" },
-    { name: "Tinsley",     email: "tinsley@waresport.com",      password: "Waresport2025!" },
-    { name: "Sebastian",   email: "sebastian@waresport.com",    password: "Waresport2025!" },
-    { name: "Alyssa",      email: "alyssa@waresport.com",       password: "Waresport2025!" },
-    { name: "Joshua Hernandez", email: "joshua@waresport.com",  password: "Waresport2025!", track: "blogs" },
+    { name: "Joseph Parli",      email: "josephparli@waresport.com",  password: "Waresport2025!" },
+    { name: "Catherine",         email: "catherine@waresport.com",    password: "Waresport2025!" },
+    { name: "David Z.",          email: "davidz@waresport.com",       password: "Waresport2025!" },
+    { name: "Olivia Mohil",      email: "oliviamohil@waresport.com",  password: "Waresport2025!" },
+    { name: "Paul Hoch",         email: "paulhoch@waresport.com",     password: "Waresport2025!" },
+    { name: "Cecilia",           email: "cecilia@waresport.com",      password: "Waresport2025!" },
+    { name: "Elilah",            email: "elilah@waresport.com",       password: "Waresport2025!" },
+    { name: "Tinsley",           email: "tinsley@waresport.com",      password: "Waresport2025!" },
+    { name: "Sebastian",         email: "sebastian@waresport.com",    password: "Waresport2025!" },
+    { name: "Alyssa",            email: "alyssa@waresport.com",       password: "Waresport2025!" },
+    { name: "Joshua Hernandez",  email: "joshua@waresport.com",       password: "Waresport2025!" },
+    { name: "William Luong",     email: "william@waresport.com",      password: "Waresport2025!" },
   ];
 
   for (const intern of interns) {
     const hash = await bcrypt.hash(intern.password, 12);
-    const track = (intern as { track?: string }).track ?? null;
     await prisma.user.upsert({
       where: { email: intern.email },
-      update: { name: intern.name, passwordHash: hash, role: "INTERN", track, mustChangePassword: false },
-      create: { name: intern.name, email: intern.email, passwordHash: hash, role: "INTERN", track, mustChangePassword: false },
+      update: { name: intern.name, passwordHash: hash, role: "INTERN", mustChangePassword: false },
+      create: { name: intern.name, email: intern.email, passwordHash: hash, role: "INTERN", mustChangePassword: false },
     });
     console.log(`✅ Intern: ${intern.email}`);
+  }
+
+  // Assign all week 1 tasks to William Luong
+  const william = await prisma.user.findUnique({ where: { email: "william@waresport.com" } });
+  if (william) {
+    const week1Tasks = await prisma.task.findMany({
+      where: { weekNumber: 1 },
+    });
+    for (const task of week1Tasks) {
+      await prisma.taskAssignment.upsert({
+        where: { taskId_userId: { taskId: task.id, userId: william.id } },
+        update: {},
+        create: { taskId: task.id, userId: william.id },
+      });
+    }
+    console.log(`✅ Assigned ${week1Tasks.length} week 1 task(s) to William Luong`);
   }
 
   await prisma.resource.deleteMany({

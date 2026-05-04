@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect, notFound } from "next/navigation";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, CheckCircle2, Clock, FileText, Link2, Phone, Download, ExternalLink } from "lucide-react";
 import Link from "next/link";

@@ -16,6 +16,22 @@ const TRACK_COLORS: Record<string, { bg: string; text: string; border: string }>
 
 const DEFAULT_COLOR = { bg: "bg-gray-50", text: "text-gray-700", border: "border-gray-200" };
 
+// Hardcoded track assignments by email
+const INTERN_TRACKS: Record<string, string[]> = {
+  "josephparli@waresport.com":  ["Blogs", "Newsletters"],
+  "catherine@waresport.com":    ["Newsletters"],
+  "davidz@waresport.com":       ["Blogs", "Newsletters"],
+  "oliviamohil@waresport.com":  ["Social Media"],
+  "paulhoch@waresport.com":     ["Blogs", "Social Media"],
+  "cecilia@waresport.com":      ["Podcast"],
+  "elilah@waresport.com":       ["Newsletters"],
+  "tinsley@waresport.com":      ["Social Media"],
+  "sebastian@waresport.com":    ["Social Media"],
+  "alyssa@waresport.com":       ["Social Media"],
+  "joshua@waresport.com":       ["Blogs"],
+  "william@waresport.com":      [],
+};
+
 export default async function DirectoryPage() {
   const session = await getServerSession(authOptions);
   if (!session) redirect("/login");
@@ -26,7 +42,6 @@ export default async function DirectoryPage() {
       id: true,
       name: true,
       email: true,
-      track: true,
       linkedin: true,
       bio: true,
       avatarUrl: true,
@@ -34,13 +49,12 @@ export default async function DirectoryPage() {
     orderBy: { name: "asc" },
   });
 
-  // Build group map — interns can belong to multiple groups (comma-separated track)
+  // Build group map using hardcoded track assignments
   const groupMap: Record<string, typeof interns> = {};
   for (const intern of interns) {
-    const groups = intern.track
-      ? intern.track.split(",").map((t) => t.trim())
-      : ["Unassigned"];
-    for (const group of groups) {
+    const groups = INTERN_TRACKS[intern.email] ?? [];
+    const assignedGroups = groups.length > 0 ? groups : ["Unassigned"];
+    for (const group of assignedGroups) {
       if (!groupMap[group]) groupMap[group] = [];
       groupMap[group].push(intern);
     }
@@ -64,7 +78,7 @@ export default async function DirectoryPage() {
       ) : (
         <div className="space-y-10">
 
-          {/* ── Flowchart / grouped view ── */}
+          {/* ── Grouped view ── */}
           <section>
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">By group</h2>
             <div className="flex flex-wrap gap-6 items-start">
@@ -99,9 +113,7 @@ export default async function DirectoryPage() {
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">All interns</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {interns.map((person) => {
-                const groups = person.track
-                  ? person.track.split(",").map((t) => t.trim())
-                  : [];
+                const groups = INTERN_TRACKS[person.email] ?? [];
                 return (
                   <Card key={person.id} className="overflow-hidden">
                     <CardContent className="p-5">

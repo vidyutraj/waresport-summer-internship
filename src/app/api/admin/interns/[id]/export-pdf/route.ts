@@ -54,6 +54,10 @@ export async function GET(
   y += 16;
   doc.text(`Email: ${intern.email}`, margin, y);
   y += 16;
+  if (intern.track) {
+    doc.text(`Track: ${intern.track}`, margin, y);
+    y += 16;
+  }
   if (intern.linkedin) {
     const linkLines = doc.splitTextToSize(`LinkedIn: ${intern.linkedin}`, 500);
     doc.text(linkLines, margin, y);

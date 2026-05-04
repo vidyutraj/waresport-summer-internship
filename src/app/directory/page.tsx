@@ -26,6 +26,7 @@ export default async function DirectoryPage() {
       id: true,
       name: true,
       email: true,
+      track: true,
       linkedin: true,
       bio: true,
       avatarUrl: true,
@@ -33,15 +34,19 @@ export default async function DirectoryPage() {
     orderBy: { name: "asc" },
   });
 
-  // Build group map — all interns go to a single group
+  // Build group map — interns can belong to multiple groups (comma-separated track)
   const groupMap: Record<string, typeof interns> = {};
   for (const intern of interns) {
-    const group = "All Interns";
-    if (!groupMap[group]) groupMap[group] = [];
-    groupMap[group].push(intern);
+    const groups = intern.track
+      ? intern.track.split(",").map((t) => t.trim())
+      : ["Unassigned"];
+    for (const group of groups) {
+      if (!groupMap[group]) groupMap[group] = [];
+      groupMap[group].push(intern);
+    }
   }
 
-  const groupOrder = ["All Interns"];
+  const groupOrder = ["Blogs", "Newsletters", "Social Media", "Podcast", "Unassigned"];
   const sortedGroups = [
     ...groupOrder.filter((g) => groupMap[g]),
     ...Object.keys(groupMap).filter((g) => !groupOrder.includes(g)),
@@ -94,7 +99,9 @@ export default async function DirectoryPage() {
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">All interns</h2>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {interns.map((person) => {
-              const groups: string[] = [];
+                const groups = person.track
+                  ? person.track.split(",").map((t) => t.trim())
+                  : [];
                 return (
                   <Card key={person.id} className="overflow-hidden">
                     <CardContent className="p-5">

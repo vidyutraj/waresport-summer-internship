@@ -54,6 +54,7 @@ export default async function AdminInternsPage() {
                 <thead>
                   <tr className="border-b border-gray-100">
                     <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wide px-6 py-3">Intern</th>
+                    <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wide px-4 py-3">Track</th>
                     <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wide px-4 py-3">Tasks (week)</th>
                     <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wide px-4 py-3">Log status</th>
                     <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wide px-4 py-3">Joined</th>
@@ -80,6 +81,13 @@ export default async function AdminInternsPage() {
                               <p className="text-xs text-gray-500">{intern.email}</p>
                             </div>
                           </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          {intern.track ? (
+                            <Badge variant="outline">{intern.track}</Badge>
+                          ) : (
+                            <span className="text-xs text-gray-400">—</span>
+                          )}
                         </td>
                         <td className="px-4 py-4">
                           <span className="text-sm text-gray-700">

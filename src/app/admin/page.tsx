@@ -26,7 +26,7 @@ export default async function AdminDashboardPage() {
     prisma.user.count({ where: { role: "INTERN" } }),
     prisma.taskAssignment.findMany({
       where: { task: { weekNumber: currentWeek } },
-      include: { task: true, user: { select: { name: true, email: true } } },
+      include: { task: true, user: { select: { name: true, email: true, track: true } } },
     }),
     prisma.weeklyLog.findMany({
       where: { weekNumber: currentWeek },
@@ -35,7 +35,7 @@ export default async function AdminDashboardPage() {
     prisma.user.findMany({
       where: { role: "INTERN" },
       select: {
-        id: true, name: true, email: true, createdAt: true,
+        id: true, name: true, email: true, track: true, createdAt: true,
         taskAssignments: {
           where: { task: { weekNumber: currentWeek } },
           include: { task: true },
@@ -119,7 +119,7 @@ export default async function AdminDashboardPage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-gray-900">{intern.name}</p>
-                            <p className="text-xs text-gray-500">{intern.email}</p>
+                            <p className="text-xs text-gray-500">{intern.track ?? "No track"}</p>
                           </div>
                           <div className="flex items-center gap-2 shrink-0">
                             <span className="text-xs text-gray-500">{completed}/{total} tasks</span>

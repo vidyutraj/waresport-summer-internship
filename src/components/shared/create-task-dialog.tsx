@@ -115,7 +115,8 @@ export function CreateTaskDialog({ children }: { children: React.ReactNode }) {
   const filteredInterns = interns.filter(
     (i) =>
       i.name.toLowerCase().includes(internSearch.toLowerCase()) ||
-      i.email.toLowerCase().includes(internSearch.toLowerCase())
+      i.email.toLowerCase().includes(internSearch.toLowerCase()) ||
+      (i.track ?? "").toLowerCase().includes(internSearch.toLowerCase())
   );
 
   return (

@@ -39,7 +39,7 @@ export async function GET(req: Request) {
 
   const logs = await prisma.weeklyLog.findMany({
     where: userId ? { userId } : undefined,
-    include: { user: { select: { name: true, email: true } } },
+    include: { user: { select: { name: true, email: true, track: true } } },
     orderBy: [{ weekNumber: "desc" }, { submittedAt: "desc" }],
   });
 

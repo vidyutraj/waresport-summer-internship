@@ -138,7 +138,8 @@ export function EditTaskDialog({
   const filteredInterns = interns.filter(
     (i) =>
       i.name.toLowerCase().includes(internSearch.toLowerCase()) ||
-      i.email.toLowerCase().includes(internSearch.toLowerCase())
+      i.email.toLowerCase().includes(internSearch.toLowerCase()) ||
+      (i.track ?? "").toLowerCase().includes(internSearch.toLowerCase())
   );
 
   return (
@@ -330,6 +331,7 @@ export function EditTaskDialog({
                           <p className="text-sm font-medium text-gray-900">{intern.name}</p>
                           <p className="text-xs text-gray-500 truncate">
                             {intern.email}
+                            {intern.track ? ` · ${intern.track}` : ""}
                           </p>
                         </div>
                       </label>

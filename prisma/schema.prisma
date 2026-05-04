@@ -32,7 +32,7 @@ model User {
   email             String           @unique
   passwordHash      String
   role              Role             @default(INTERN)
-  track             String?
+  tracks            String[]  @default([])
   bio               String?
   linkedin          String?
   phone             String?

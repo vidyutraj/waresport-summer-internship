@@ -89,14 +89,16 @@ async function main() {
     { name: "Tinsley",     email: "tinsley@waresport.com",      password: "Waresport2025!" },
     { name: "Sebastian",   email: "sebastian@waresport.com",    password: "Waresport2025!" },
     { name: "Alyssa",      email: "alyssa@waresport.com",       password: "Waresport2025!" },
+    { name: "Joshua Hernandez", email: "joshua@waresport.com",  password: "Waresport2025!", track: "blogs" },
   ];
 
   for (const intern of interns) {
     const hash = await bcrypt.hash(intern.password, 12);
+    const track = (intern as { track?: string }).track ?? null;
     await prisma.user.upsert({
       where: { email: intern.email },
-      update: { name: intern.name, passwordHash: hash, role: "INTERN", mustChangePassword: false },
-      create: { name: intern.name, email: intern.email, passwordHash: hash, role: "INTERN", mustChangePassword: false },
+      update: { name: intern.name, passwordHash: hash, role: "INTERN", track, mustChangePassword: false },
+      create: { name: intern.name, email: intern.email, passwordHash: hash, role: "INTERN", track, mustChangePassword: false },
     });
     console.log(`✅ Intern: ${intern.email}`);
   }

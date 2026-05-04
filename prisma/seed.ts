@@ -48,6 +48,11 @@ async function main() {
     await clearAllApplicationData();
   }
 
+  const internPassword = process.env.SEED_INTERN_PASSWORD;
+  if (!internPassword) {
+    throw new Error("Missing SEED_INTERN_PASSWORD. See .env.example.");
+  }
+
   console.log("🌱 Seeding database…");
 
   const admins = getSeedAdminsFromEnv();
@@ -79,18 +84,18 @@ async function main() {
 
   // Hardcoded intern accounts
   const interns = [
-    { name: "Joseph Parli",  email: "josephparli@waresport.com",  password: "Waresport2025!" },
-    { name: "Catherine",     email: "catherine@waresport.com",    password: "Waresport2025!" },
-    { name: "David Z.",      email: "davidz@waresport.com",       password: "Waresport2025!" },
-    { name: "Olivia Mohil",  email: "oliviamohil@waresport.com",  password: "Waresport2025!" },
-    { name: "Paul Hoch",     email: "paulhoch@waresport.com",     password: "Waresport2025!" },
-    { name: "Cecilia",       email: "cecilia@waresport.com",      password: "Waresport2025!" },
-    { name: "Elilah",      email: "elilah@waresport.com",       password: "Waresport2025!" },
-    { name: "Tinsley",     email: "tinsley@waresport.com",      password: "Waresport2025!" },
-    { name: "Sebastian",   email: "sebastian@waresport.com",    password: "Waresport2025!" },
-    { name: "Alyssa",      email: "alyssa@waresport.com",       password: "Waresport2025!" },
-    { name: "William Luong", email: "william@waresport.com",    password: "Waresport2025!" },
-    { name: "Joshua Hernandez", email: "joshuah@waresport.com", password: "Waresport2025!" },
+    { name: "Joseph Parli",      email: "josephparli@waresport.com",  password: internPassword },
+    { name: "Catherine",         email: "catherine@waresport.com",    password: internPassword },
+    { name: "David Z.",          email: "davidz@waresport.com",       password: internPassword },
+    { name: "Olivia Mohil",      email: "oliviamohil@waresport.com",  password: internPassword },
+    { name: "Paul Hoch",         email: "paulhoch@waresport.com",     password: internPassword },
+    { name: "Cecilia",           email: "cecilia@waresport.com",      password: internPassword },
+    { name: "Elilah",            email: "elilah@waresport.com",       password: internPassword },
+    { name: "Tinsley",           email: "tinsley@waresport.com",      password: internPassword },
+    { name: "Sebastian",         email: "sebastian@waresport.com",    password: internPassword },
+    { name: "Alyssa",            email: "alyssa@waresport.com",       password: internPassword },
+    { name: "William Luong",     email: "william@waresport.com",      password: internPassword },
+    { name: "Joshua Hernandez",  email: "joshuah@waresport.com",      password: internPassword },
   ];
 
   for (const intern of interns) {
@@ -103,23 +108,27 @@ async function main() {
     console.log(`✅ Intern: ${intern.email}`);
   }
 
-  // Assign all week 1 tasks to William Luong
-  const william = await prisma.user.findUnique({ where: { email: "william@waresport.com" } });
-  if (william) {
-    const week1Tasks = await prisma.task.findMany({
-      where: { weekNumber: 1 },
-    });
-    for (const task of week1Tasks) {
-      await prisma.taskAssignment.upsert({
-        where: { taskId_userId: { taskId: task.id, userId: william.id } },
-        update: {},
-        create: { taskId: task.id, userId: william.id },
-      });
-    }
-    console.log(`✅ Assigned ${week1Tasks.length} week 1 task(s) to William Luong`);
-  }
+  // Assign all week 1 ALL tasks to William Luong and Joshua Hernandez
+  const week1Tasks = await prisma.task.findMany({
+    where: { weekNumber: 1, assignedTo: "ALL" },
+  });
 
-  await prisma.resource.deleteMany({
+  for (const { email, label } of [
+    { email: "william@waresport.com", label: "William Luong" },
+    { email: "joshuah@waresport.com", label: "Joshua Hernandez" },
+  ]) {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (user) {
+      for (const task of week1Tasks) {
+        await prisma.taskAssignment.upsert({
+          where: { taskId_userId: { taskId: task.id, userId: user.id } },
+          update: {},
+          create: { taskId: task.id, userId: user.id },
+        });
+      }
+      console.log(`✅ Assigned ${week1Tasks.length} week 1 task(s) to ${label}`);
+    }
+  }  await prisma.resource.deleteMany({
     where: {
       title: {
         in: [

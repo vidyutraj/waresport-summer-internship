@@ -28,7 +28,7 @@ const INTERN_TRACKS: Record<string, string[]> = {
   "tinsley@waresport.com":      ["Social Media"],
   "sebastian@waresport.com":    ["Social Media"],
   "alyssa@waresport.com":       ["Social Media"],
-  "joshua@waresport.com":       ["Blogs"],
+  "joshuah@waresport.com":      ["Blogs"],
   "william@waresport.com":      [],
 };
 

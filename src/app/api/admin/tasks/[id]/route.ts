@@ -20,7 +20,7 @@ async function syncAssignmentsAfterUpdate(
     targetUserIds = rows.map((r) => r.id);
   } else if (task.assignedTo === AssignedTo.TRACK && task.track) {
     const rows = await prisma.user.findMany({
-      where: { role: Role.INTERN, track: task.track },
+      where: { role: Role.INTERN, tracks: { has: task.track } },
       select: { id: true },
     });
     targetUserIds = rows.map((r) => r.id);

@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { name, email, track, tempPassword } = await req.json();
+  const { name, email, tempPassword } = await req.json();
 
   if (!name || !email || !tempPassword) {
     return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -32,7 +32,6 @@ export async function POST(req: Request) {
       email: normalizedEmail,
       passwordHash,
       role: "INTERN",
-      track: track || null,
       mustChangePassword: true,
     },
   });
@@ -79,7 +78,7 @@ export async function GET() {
   const interns = await prisma.user.findMany({
     where: { role: "INTERN" },
     select: {
-      id: true, name: true, email: true, track: true, createdAt: true, avatarUrl: true,
+      id: true, name: true, email: true, createdAt: true, avatarUrl: true,
     },
     orderBy: { name: "asc" },
   });

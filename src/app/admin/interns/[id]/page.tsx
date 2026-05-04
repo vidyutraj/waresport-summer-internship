@@ -76,7 +76,7 @@ export default async function InternDetailPage({ params }: { params: { id: strin
           <h1 className="text-2xl font-bold text-gray-900">{intern.name}</h1>
           <p className="text-gray-500">{intern.email}</p>
           <div className="flex items-center gap-2 mt-2 flex-wrap">
-            {intern.track && <Badge variant="outline">{intern.track}</Badge>}
+
             <span className="text-xs text-gray-400">Joined {formatDate(intern.createdAt)}</span>
             {intern.linkedin && (
               <a href={intern.linkedin} target="_blank" rel="noopener noreferrer" className="text-xs text-brand-600 flex items-center gap-1">

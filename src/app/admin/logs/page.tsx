@@ -12,7 +12,7 @@ export default async function AdminLogsPage() {
   if (!session || session.user.role !== "ADMIN") redirect("/dashboard");
 
   const logs = await prisma.weeklyLog.findMany({
-    include: { user: { select: { name: true, email: true, track: true } } },
+    include: { user: { select: { name: true, email: true } } },
     orderBy: [{ weekNumber: "desc" }, { submittedAt: "desc" }],
   });
 
@@ -39,7 +39,6 @@ export default async function AdminLogsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-3 flex-wrap">
                       <span className="text-sm font-semibold text-gray-900">{log.user.name}</span>
-                      {log.user.track && <Badge variant="outline">{log.user.track}</Badge>}
                       <span className="text-xs text-gray-400 ml-auto">{formatDate(log.submittedAt)}</span>
                     </div>
                     <div className="space-y-3">

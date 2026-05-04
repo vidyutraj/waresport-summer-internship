@@ -29,7 +29,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Track is required" }, { status: 400 });
     }
     internIds = await prisma.user.findMany({
-      where: { role: "INTERN", track },
+      where: { role: "INTERN", tracks: { has: track } },
       select: { id: true },
     });
   } else if (mode === "INTERNS") {

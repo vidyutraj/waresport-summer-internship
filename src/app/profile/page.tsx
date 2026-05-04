@@ -15,7 +15,7 @@ export default async function ProfilePage() {
     where: { id: session.user.id },
     select: {
       id: true, name: true, email: true, bio: true,
-      linkedin: true, phone: true, track: true, createdAt: true,
+      linkedin: true, phone: true, createdAt: true,
     },
   });
 
@@ -40,11 +40,6 @@ export default async function ProfilePage() {
                 <h2 className="text-xl font-bold text-gray-900">{user.name}</h2>
                 <p className="text-gray-500 text-sm">{user.email}</p>
                 <div className="flex items-center gap-2 mt-1">
-                  {user.track && (
-                    <span className="inline-flex items-center rounded-full bg-brand-100 text-brand-800 px-2.5 py-0.5 text-xs font-medium">
-                      {user.track}
-                    </span>
-                  )}
                   <span className="text-xs text-gray-400">Joined {formatDate(user.createdAt)}</span>
                 </div>
               </div>

@@ -85,7 +85,7 @@ export async function POST(req: Request) {
     });
   } else if (assignedTo === "TRACK" && track) {
     internIds = await prisma.user.findMany({
-      where: { role: "INTERN", track },
+      where: { role: "INTERN", tracks: { has: track } },
       select: { id: true },
     });
   } else if (assignedTo === "INDIVIDUAL" && individualIds.length > 0) {

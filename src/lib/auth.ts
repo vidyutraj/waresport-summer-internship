@@ -32,7 +32,6 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           email: user.email,
           role: user.role,
-          track: user.track ?? undefined,
           mustChangePassword: user.mustChangePassword,
         };
       },
@@ -41,10 +40,9 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user, trigger, session }) {
       if (user) {
-        const u = user as { id: string; role: string; track?: string; mustChangePassword: boolean };
+        const u = user as { id: string; role: string; mustChangePassword: boolean };
         token.id = u.id;
         token.role = u.role;
-        token.track = u.track;
         token.mustChangePassword = u.mustChangePassword;
       }
       // Handle session.update() calls — patch the token in place
@@ -57,7 +55,6 @@ export const authOptions: NextAuthOptions = {
       if (token) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
-        session.user.track = token.track as string | undefined;
         session.user.mustChangePassword = token.mustChangePassword as boolean;
       }
       return session;

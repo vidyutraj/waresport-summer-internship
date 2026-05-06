@@ -30,6 +30,7 @@ const INTERN_TRACKS: Record<string, string[]> = {
   "alyssa@waresport.com":       ["Social Media"],
   "joshuah@waresport.com":      ["Blogs"],
   "william@waresport.com":      [],
+  "keona@waresport.com":        [],
 };
 
 export default async function DirectoryPage() {

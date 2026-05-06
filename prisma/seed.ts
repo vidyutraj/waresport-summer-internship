@@ -96,6 +96,7 @@ async function main() {
     { name: "Alyssa",            email: "alyssa@waresport.com",       password: internPassword },
     { name: "William Luong",     email: "william@waresport.com",      password: internPassword },
     { name: "Joshua Hernandez",  email: "joshuah@waresport.com",      password: internPassword },
+    { name: "Keona",             email: "keona@waresport.com",         password: internPassword },
   ];
 
   for (const intern of interns) {
@@ -116,6 +117,7 @@ async function main() {
   for (const { email, label } of [
     { email: "william@waresport.com", label: "William Luong" },
     { email: "joshuah@waresport.com", label: "Joshua Hernandez" },
+    { email: "keona@waresport.com",   label: "Keona" },
   ]) {
     const user = await prisma.user.findUnique({ where: { email } });
     if (user) {
